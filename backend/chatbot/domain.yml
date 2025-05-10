@@ -1,0 +1,17 @@
+slots:
+  spieler_id:
+    type: text
+    influence_conversation: false
+  is_admin:
+    type: bool
+    influence_conversation: false
+
+responses:
+  utter_health_advice:
+    - text: "Beim Schulterdehnen: Arme auf Schulterhöhe anheben, dann den Arm vor dem Körper ziehen."
+
+  utter_no_permission:
+    - text: "Du hast leider keine Berechtigung, die Daten aller Spieler anzusehen."
+
+  utter_ask_player_data:
+    - text: "Hier sind deine Bewegungsdaten: [Daten folgen...]"

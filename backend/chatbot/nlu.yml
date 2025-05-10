@@ -1,0 +1,14 @@
+nlu:
+- intent: health_advice
+  examples: |
+    - Wie dehne ich meine Schulter richtig?
+    - Wie sollte ich mich aufwärmen?
+    - Welche Übungen helfen gegen Rückenschmerzen?
+
+- intent: player_data
+  examples: |
+    - Zeige mir meine Bewegungsdaten
+    - Wie war mein letzter Armwinkel?
+    - Wie oft habe ich mein Handgelenk überstreckt?
+    - Zeige die Bewegungsdaten aller Spieler (nur Admin)
+

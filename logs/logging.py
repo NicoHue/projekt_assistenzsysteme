@@ -1,0 +1,1 @@
+# todo: Logging hier als Class implementieren und am Programmbeginn einmalig initialisisieren

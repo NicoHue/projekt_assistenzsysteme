@@ -1,0 +1,15 @@
+language: de
+pipeline:
+  - name: WhitespaceTokenizer
+  - name: RegexFeaturizer
+  - name: LexicalSyntacticFeaturizer
+  - name: CountVectorsFeaturizer
+  - name: DIETClassifier
+  - name: EntitySynonymMapper
+  - name: ResponseSelector
+  - name: FallbackClassifier
+
+policies:
+  - name: MemoizationPolicy
+  - name: RulePolicy
+  - name: UnexpecTEDIntentPolicy

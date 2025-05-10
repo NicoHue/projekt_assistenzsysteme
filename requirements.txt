@@ -1,0 +1,10 @@
+streamlit~=1.45.0
+pandas~=2.2.3
+requests~=2.32.3
+numpy~=1.26.4
+mediapipe~=0.10.21
+plotly~=6.0.1
+matplotlib~=3.9.4
+pillow~=11.2.1
+opencv-py~=4.11.0.86
+streamlit-authenticator~=0.4.2
