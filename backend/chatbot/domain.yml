@@ -1,17 +1,56 @@
+version: "3.1"
+
+intents:
+  - ask_sport_question
+  - request_movement_data
+  - provide_name
+  - provide_birthdate
+
+entities:
+  - name
+  - birthdate
+
 slots:
-  spieler_id:
+  name:
     type: text
-    influence_conversation: false
-  is_admin:
-    type: bool
-    influence_conversation: false
+    mappings:
+      - type: from_entity
+        entity: name
+
+  birthdate:
+    type: text
+    mappings:
+      - type: from_entity
+        entity: birthdate
+
+  id:
+    type: text
+    mappings:
+      - type: from_entity
+        entity: id
+
 
 responses:
-  utter_health_advice:
-    - text: "Beim Schulterdehnen: Arme auf Schulterhöhe anheben, dann den Arm vor dem Körper ziehen."
+  utter_greet:
+    - text: "Hallo! Ich bin dein Sport-Health-Bot. Wie kann ich dir helfen?"
 
-  utter_no_permission:
-    - text: "Du hast leider keine Berechtigung, die Daten aller Spieler anzusehen."
+  utter_ask_name:
+    - text: "Für welchen Patienten brauchst du die Daten? Bitte nenne den vollständigen Namen."
 
-  utter_ask_player_data:
-    - text: "Hier sind deine Bewegungsdaten: [Daten folgen...]"
+  utter_ask_birthdate:
+    - text: "Bitte gib das Geburtsdatum des Patienten an (Format: YYYY-MM-DD)."
+
+  utter_no_patient_found:
+    - text: "❌ Es wurde kein Patient mit diesen Daten gefunden."
+
+  utter_multiple_patients_found:
+    - text: "⚠️ Es gibt mehrere Patienten mit diesem Namen. Bitte wähle anhand des Geburtsdatums: {options}"
+
+  utter_display_data:
+    - text: "Hier sind die Bewegungsdaten von {name} (ID: {id}):\n{data}"
+
+  utter_general_sport_tip:
+    - text: "Achte auf eine ausgewogene Mischung aus Kraft, Ausdauer und Beweglichkeit. 💪"
+
+actions:
+  - action_request_movement_data

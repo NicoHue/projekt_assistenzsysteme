@@ -1,0 +1,16 @@
+version: "3.1"
+
+stories:
+- story: patient data flow
+  steps:
+    - intent: request_movement_data
+    - action: utter_ask_name
+    - intent: provide_name
+    - action: utter_ask_birthdate
+    - intent: provide_birthdate
+    - action: action_request_movement_data
+
+- story: Start movement data flow
+  steps:
+    - intent: request_movement_data
+    - action: action_request_movement_data

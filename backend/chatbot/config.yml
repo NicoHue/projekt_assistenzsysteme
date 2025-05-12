@@ -1,15 +1,15 @@
-language: de
+language: "de"
+
 pipeline:
-  - name: WhitespaceTokenizer
-  - name: RegexFeaturizer
-  - name: LexicalSyntacticFeaturizer
-  - name: CountVectorsFeaturizer
-  - name: DIETClassifier
-  - name: EntitySynonymMapper
-  - name: ResponseSelector
-  - name: FallbackClassifier
+- name: WhitespaceTokenizer
+- name: RegexFeaturizer
+- name: LexicalSyntacticFeaturizer
+- name: CountVectorsFeaturizer
+- name: DIETClassifier
+  epochs: 100
+- name: FallbackClassifier
+  threshold: 0.3
 
 policies:
-  - name: MemoizationPolicy
-  - name: RulePolicy
-  - name: UnexpecTEDIntentPolicy
+- name: RulePolicy
+assistant_id: 20250511-161212-mean-vault

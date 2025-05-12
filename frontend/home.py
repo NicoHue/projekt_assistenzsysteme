@@ -12,8 +12,8 @@ import os
 
 def render():
     user = st.session_state["current_user"]
-    role = user.get("role")
-    customer = user.get("customer")
+    role = user["role"]
+    customer = user["customer"]
 
     # ================================
     # 🖼️ Kundenlogo anzeigen

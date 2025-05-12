@@ -1,7 +1,0 @@
-version: "3.1"
-stories:
-- story: frage nach Kniewinkel
-  steps:
-    - intent: frage_kniewinkel
-    - action: utter_gib_kniewinkel
-    - action: action_zeige_kniewinkel

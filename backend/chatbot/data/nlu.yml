@@ -1,0 +1,26 @@
+version: "3.1"
+
+nlu:
+- intent: ask_sport_question
+  examples: |
+    - Hast du einen Fitnesstipp?
+    - Wie verbessere ich meine Beweglichkeit?
+    - Was ist gutes Aufwärmen?
+
+- intent: request_movement_data
+  examples: |
+    - Zeig mir die Bewegungsdaten vom Max
+    - Ich will die Daten von Frau Müller sehen
+    - Bewegungsdaten abrufen
+
+- intent: provide_name
+  examples: |
+    - Max Mustermann
+    - Anna Müller
+    - Ich heiße Thomas Meyer
+
+- intent: provide_birthdate
+  examples: |
+    - 1990-01-01
+    - Geboren am 02.03.1985
+    - 01.08.2002

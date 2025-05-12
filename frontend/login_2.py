@@ -13,11 +13,11 @@ def render():
     # Lade Benutzer aus der Datenbank
     users = data_storage.get_all_users()
 
-    # Erstelle das credentials-Dictionary
+    # Erstelle das credentials-Dictionary --> yaml
     credentials = {
         'usernames': {
             user["username"]: {
-                'name': user["username"],
+                'username': user["username"],
                 'password': user["password"],  # bcrypt-gehashter Hash
             } for user in users
         }
@@ -35,11 +35,26 @@ def render():
         cookie_key,
         expiry_days
     )
+    st.write("Credentials Debug:", credentials)
+
     # Login-Formular anzeigen
+    auth_status = None  # Variable vorher definieren
     try:
-        name, auth_status, username = authenticator.login(location='main', key='Login')
-    except TypeError:
-        st.error("Login fehlgeschlagen – möglicherweise inkompatible Parameter.")
+        result = authenticator.login(location='main', key='Login')
+
+        if result:
+            name, auth_status, username = result
+            st.write("Debugging:", name, auth_status, username)
+
+        else:
+            name, auth_status, username = None, None, None
+    except TypeError as e:
+        name, auth_status, username = None, None, None
+        st.error(f"Login fehlgeschlagen – möglicherweise inkompatible Parameter: {e}")
+
+
+    except TypeError as e:
+        st.error(f"Login fehlgeschlagen – möglicherweise inkompatible Parameter: {e}")
 
     if auth_status is False:
         st.error("❌ Falsche Zugangsdaten")
