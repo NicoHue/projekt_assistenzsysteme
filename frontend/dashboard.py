@@ -54,11 +54,12 @@ def render():
                 st.success(f"Patient {name} hinzugefügt.")
                 st.rerun()
 
-    # Spieler auswählen
+    # Patient auswählen
     patients_df = pd.DataFrame(st.session_state.data_storage.get_all_patients())
     if not patients_df.empty:
         patients_df["anzeige"] = patients_df["name"] + " " + patients_df["birthdate"]
         selected_name = st.selectbox("🔽 Patient auswählen", patients_df["anzeige"])
+        select_type_of_movement = st.selectbox("Analyseart auswählen", ["Gang", "Lauf", "Sprung"])
         selected_patient = patients_df[patients_df["anzeige"] == selected_name].iloc[0]
         print(f"Patient: {selected_patient} - ID: {selected_patient['id']}")
     else:
@@ -71,7 +72,7 @@ def render():
 
         try:
             all_data = st.session_state.data_storage.get_all_movement_data()
-            df = pd.DataFrame([entry for entry in all_data if int(entry["patient_id"]) == selected_patient["id"]]) # int-Konvertierung, da "patient_id" in der movement_data als string gespeichert wird
+            df = pd.DataFrame([entry for entry in all_data if ((int(entry["patient_id"]) == selected_patient["id"]) and (entry["type"] == select_type_of_movement))]) # int-Konvertierung, da "patient_id" in der movement_data als string gespeichert wird
 
             if df.empty:
                 st.warning("Keine Bewegungsdaten für diesen Patienten vorhanden.")

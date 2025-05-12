@@ -1,0 +1,9 @@
+credentials:
+  usernames:
+    test_user:
+      name: Admin
+      password: 240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9  # In echter Nutzung sollte das ein gehashter Wert sein!
+cookie:
+  name: streamlit_auth_cookie
+  key: random_secret_key
+  expiry_days: 7

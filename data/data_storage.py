@@ -5,6 +5,8 @@ from datetime import datetime
 import hashlib
 import streamlit as st
 
+# todo: Logging in das main.py verlagern
+
 # Logging konfigurieren
 log_dir = os.path.join(os.getcwd(), "logs")
 os.makedirs(log_dir, exist_ok=True)
@@ -20,8 +22,12 @@ formatter = logging.Formatter("[%(levelname)s] %(message)s")
 console.setFormatter(formatter)
 logging.getLogger().addHandler(console)
 
+
 # todo: Prüfen, warum immer wieder ein DataStorage initialisiert wird, wenn ein Datenzugriff gemacht wurde
 class DataStorage:
+
+    # --- class init ---
+
     def __init__(self):
         try:
             self.base_dir = os.getcwd()
@@ -46,11 +52,15 @@ class DataStorage:
         except Exception as e:
             logging.exception(f"❌ Fehler bei Initialisierung: {e}")
 
+    # --- folder path ---
+
     def ensure_video_folder_exists(self):
         try:
             os.makedirs(self.video_path, exist_ok=True)
         except Exception as e:
             logging.error(f"❌ Fehler beim Erstellen des Video-Ordners: {e}")
+
+    # --- data base ---
 
     def connect(self):
         try:
@@ -62,6 +72,17 @@ class DataStorage:
         except Exception as e:
             logging.exception("❌ Fehler beim Verbinden mit der Datenbank")
 
+    def delete_database_on_exit(self):
+        try:
+            self.conn.close()
+            if os.path.exists(self.db_path):
+                os.remove(self.db_path)
+                logging.info("🗑️ Datenbank wurde beim Beenden gelöscht.")
+            else:
+                logging.warning("⚠️ Keine Datenbank gefunden zum Löschen.")
+        except Exception as e:
+            logging.exception("❌ Fehler beim Löschen der Datenbank")
+
     def _create_tables(self):
         try:
             with self.conn:
@@ -69,6 +90,7 @@ class DataStorage:
                     CREATE TABLE IF NOT EXISTS users (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         username TEXT UNIQUE NOT NULL,
+                        user TEXT NOT NULL,
                         password TEXT NOT NULL,
                         role TEXT NOT NULL,
                         customer TEXT,
@@ -109,6 +131,8 @@ class DataStorage:
         except Exception as e:
             logging.exception("❌ Fehler beim Erstellen der Tabellen")
 
+    # --- movement_data ---
+
     def save_movement_data(self, data_list):
         try:
             with self.conn:
@@ -137,14 +161,16 @@ class DataStorage:
             logging.exception("❌ Fehler beim Laden von Bewegungsdaten")
             return []
 
-    def get_movement_data_of_patient(self):
+    def get_movement_data_of_patient(self, patient=st.session_state["current_user"]):
         try:
-            cursor = self.conn.execute('SELECT * FROM movement_data WHERE patient_id = ?', (st.session_state["current_user"],))
+            cursor = self.conn.execute('SELECT * FROM movement_data WHERE patient_id = ?', (patient,))
             columns = [col[0] for col in cursor.description]
             return [dict(zip(columns, row)) for row in cursor.fetchall()]
         except Exception as e:
             logging.exception("❌ Fehler beim Laden von Bewegungsdaten")
             return []
+
+    # --- sports ---
 
     def get_all_sports(self):
         try:
@@ -161,13 +187,27 @@ class DataStorage:
         except Exception as e:
             logging.exception("❌ Fehler beim Hinzufügen der Sportart")
 
+    # --- patient ---
+
     def add_patient(self, name, birthdate=None, sport=None):
         print(f"\n\n\n{name, birthdate, sport}\n\n\n")
         try:
             with self.conn:
-                self.conn.execute('INSERT INTO patients (name, birthdate, sport) VALUES (?, ?, ?)', (str(name), str(birthdate), str(sport),))
+                self.conn.execute('INSERT INTO patients (name, birthdate, sport) VALUES (?, ?, ?)',
+                                  (str(name), str(birthdate), str(sport),))
         except Exception as e:
             logging.exception("❌ Fehler beim Hinzufügen eines Patienten")
+
+    def get_patient_by_name_and_birthdate(self, name: str, birth_date: str) -> dict:
+        # Gibt z.B. {"id": 3, "name": "Max Mustermann", "birth_date": "1990-01-01", "data": "..."} zurück
+        try:
+            self.connect()
+            cursor = self.conn.execute("SELECT * FROM patients WHERE name = ?", (name,))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+        except Exception as e:
+            logging.exception("❌ Fehler beim Abrufen des Patienten")
+            return None
 
     def get_patient_by_name(self, patient):
         try:
@@ -179,6 +219,25 @@ class DataStorage:
             logging.exception("❌ Fehler beim Abrufen des Patienten")
             return None
 
+    def get_all_patients(self):
+        try:
+            cursor = self.conn.execute('SELECT * FROM patients')
+            columns = [col[0] for col in cursor.description]
+            return [dict(zip(columns, row)) for row in cursor.fetchall()]
+        except Exception as e:
+            logging.exception("❌ Fehler beim Laden der Patienten")
+            return []
+
+    def delete_patient(self, patient_id):
+        try:
+            with self.conn:
+                self.conn.execute('DELETE FROM patients WHERE id = ?', (patient_id,))
+                logging.info(f"🗑️ Patient mit ID {patient_id} gelöscht.")
+        except Exception as e:
+            logging.exception("❌ Fehler beim Löschen des Patienten")
+
+    # --- user ---
+
     def add_user(self, username, role, customer, allowed_modules, password):
         try:
             self.connect()
@@ -187,9 +246,9 @@ class DataStorage:
             hashed_pw = self.hash_password(password)
             with self.conn:
                 self.conn.execute("""
-                    INSERT INTO users (username, password, role, customer, allowed_modules)
-                    VALUES (?, ?, ?, ?, ?)
-                """, (username, hashed_pw, role, customer, allowed_modules))
+                    INSERT INTO users (username, user, password, role, customer, allowed_modules)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                """, (username, username, hashed_pw, role, customer, allowed_modules))
         except Exception as e:
             logging.exception("❌ Fehler beim Hinzufügen eines Nutzers")
 
@@ -236,22 +295,24 @@ class DataStorage:
             logging.exception("❌ Fehler beim Abrufen des Nutzers")
             return None
 
-    def get_all_patients(self):
+    def authenticate_user(self, username, password):
         try:
-            cursor = self.conn.execute('SELECT * FROM patients')
-            columns = [col[0] for col in cursor.description]
-            return [dict(zip(columns, row)) for row in cursor.fetchall()]
+            users = self.get_all_users()
+            for user in users:
+                if user["username"] == username and self.check_password(password, user.get("password", "")):
+                    return user
+            return None
         except Exception as e:
-            logging.exception("❌ Fehler beim Laden der Patienten")
-            return []
+            logging.exception("❌ Fehler bei der Authentifizierung")
+            return None
 
-    def delete_patient(self, patient_id):
-        try:
-            with self.conn:
-                self.conn.execute('DELETE FROM patients WHERE id = ?', (patient_id,))
-                logging.info(f"🗑️ Patient mit ID {patient_id} gelöscht.")
-        except Exception as e:
-            logging.exception("❌ Fehler beim Löschen des Patienten")
+    def hash_password(self, password):
+        return hashlib.sha256(password.encode()).hexdigest()
+
+    def check_password(self, input_password, stored_hash):
+        return self.hash_password(input_password) == stored_hash
+
+    # --- customer ---
 
     def get_all_customers(self):
         try:
@@ -307,6 +368,8 @@ class DataStorage:
         except Exception as e:
             logging.exception("❌ Fehler beim Löschen des Kunden")
 
+    # --- logo ---
+
     def save_logo(self, customer_name, image_bytes):
         try:
             logo_dir = os.path.join(self.base_dir, "data", "logos")
@@ -318,31 +381,3 @@ class DataStorage:
         except Exception as e:
             logging.exception("❌ Fehler beim Speichern des Logos")
             return None
-
-    def authenticate_user(self, username, password):
-        try:
-            users = self.get_all_users()
-            for user in users:
-                if user["username"] == username and self.check_password(password, user.get("password", "")):
-                    return user
-            return None
-        except Exception as e:
-            logging.exception("❌ Fehler bei der Authentifizierung")
-            return None
-
-    def hash_password(self, password):
-        return hashlib.sha256(password.encode()).hexdigest()
-
-    def check_password(self, input_password, stored_hash):
-        return self.hash_password(input_password) == stored_hash
-
-    def delete_database_on_exit(self):
-        try:
-            self.conn.close()
-            if os.path.exists(self.db_path):
-                os.remove(self.db_path)
-                logging.info("🗑️ Datenbank wurde beim Beenden gelöscht.")
-            else:
-                logging.warning("⚠️ Keine Datenbank gefunden zum Löschen.")
-        except Exception as e:
-            logging.exception("❌ Fehler beim Löschen der Datenbank")
